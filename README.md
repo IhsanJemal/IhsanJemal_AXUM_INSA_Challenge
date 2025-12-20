@@ -16,7 +16,7 @@ This educational project demonstrates a complete attack chain from Server-Side R
 
 ### Technology Stack
 - **Frontend**: HTML5, CSS3, JavaScript
-- **Backend**: PHP 8.x
+- **Backend**: PHP 8.2
 - **Session Store**: Redis (no authentication)
 - **Database**: SQLite
 - **Web Server**: Apache/Nginx
