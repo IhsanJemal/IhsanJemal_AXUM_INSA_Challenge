@@ -1,5 +1,7 @@
 # SSRF → Redis → RCE Attack Chain Demonstration
 
+# DEMO VIDEO LINK: https://drive.google.com/file/d/1UC3B_WpSMfuMuKdH6n_pT1jDMu99KdyZ/view?usp=sharing
+
 ## 🎯 Project Overview
 This educational project demonstrates a complete attack chain from Server-Side Request Forgery (SSRF) to Remote Code Execution (RCE) through Redis injection. The vulnerable web application is intentionally designed to show how multiple security flaws chain together for complete system compromise.
 
