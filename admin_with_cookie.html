@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Vulnerable App</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+    
+  <nav>
+    <a href="profile.php">Profile</a>
+    <a href="notes.php">Notes</a>
+
+        <a href="fetch.php">Fetch URL</a>
+    <a href="logout.php">Logout</a>
+  </nav>
+
+<h3>Login</h3>
+<form method="post">
+  <input name="username" placeholder="username" required>
+  <input type="password" name="password" placeholder="password" required>
+  <button>Login</button>
+</form>
+<p>No account? <a href="register.php">Register</a></p>
+<hr>
+<footer>
+    <small>
+        AXUM × INSA Security Challenge · Internal Demo Application
+    </small>
+</footer>
+</body>
+</html>
+ 

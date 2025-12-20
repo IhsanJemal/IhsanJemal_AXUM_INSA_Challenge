@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    container_name: isan_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app/public:/var/www/html
+      - ./app/src:/var/www/src
+      - ./app/templates:/var/www/templates
+      - ./app/data:/var/www/html/data
+      - ./app/logs:/var/www/html/logs
+      - ./app/uploads:/var/www/html/uploads
+      - ./app/data:/var/www/data
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: isan_redis
+    ports: 
+      - "6379:6379"
+    
